@@ -1,0 +1,22 @@
+# Google Cloud Project ID (or name) to be created by the project factory
+project_id = "codemender"
+
+# The Billing Account ID (Required to associate with the created project)
+billing_account = "01AF9B-F212B0-7206D7"
+
+# Optional: Folder ID or Org ID where the project will be created (uncomment and specify if applicable)
+folder_id = "730176018671"
+org_id    = "1076760281923"
+
+# Whether to append a random suffix to the project name to ensure uniqueness
+random_project_id = true
+
+# Region and Zone
+region = "us-central1"
+zone   = "us-central1-a"
+
+# Static Internal IP allocated for the Global Private Service Connect (PSC) endpoint
+psc_ip_address = "10.128.0.50"
+
+# Whether to deploy a test compute instance to verify internal connectivity
+create_test_vm = true
