@@ -33,9 +33,24 @@ output "iap_ssh_command" {
   value       = var.create_test_vm ? "gcloud compute ssh ${google_compute_instance.test_vm[0].name} --zone=${var.zone} --project=${module.project.project_id} --tunnel-through-iap" : null
 }
 
+output "iap_scp_command" {
+  description = "gcloud CLI command to securely copy the CodeMender CLI package to the isolated CLI host using Cloud IAP."
+  value       = var.create_test_vm ? "gcloud compute scp cm-linux jasonbisson@${google_compute_instance.test_vm[0].name}:/tmp --zone=${var.zone} --project=${module.project.project_id} --tunnel-through-iap" : null
+}
+
 output "verification_curl_command" {
   description = "Test curl command to execute inside the VM to verify PSC routing to Google APIs."
   value       = "curl -v https://storage.googleapis.com"
+}
+
+output "secure_web_proxy_ip" {
+  description = "The internal IP address allocated for the Secure Web Proxy (SWP)."
+  value       = var.enable_secure_web_proxy ? google_compute_address.swp_ip[0].address : null
+}
+
+output "secure_web_proxy_export_commands" {
+  description = "Shell export statements to use the Secure Web Proxy inside the VM for HTTP/HTTPS requests."
+  value       = var.enable_secure_web_proxy ? "export http_proxy=http://${google_compute_address.swp_ip[0].address}:80 && export https_proxy=http://${google_compute_address.swp_ip[0].address}:443" : null
 }
 
 output "project_id" {

@@ -198,3 +198,78 @@ resource "google_compute_instance" "test_vm" {
 
   description = "Isolated validation VM for testing CodeMender CLI over Private Service Connect"
 }
+
+# ==============================================================================
+# Secure Web Proxy (SWP) Configuration (Optional)
+# ==============================================================================
+
+resource "google_compute_subnetwork" "proxy_subnet" {
+  count         = var.enable_secure_web_proxy ? 1 : 0
+  name          = "codemender-proxy-subnet"
+  ip_cidr_range = var.proxy_subnet_ip_cidr_range
+  region        = var.region
+  network       = google_compute_network.vpc.id
+  purpose       = "REGIONAL_MANAGED_PROXY"
+  role          = "ACTIVE"
+}
+
+resource "google_compute_address" "swp_ip" {
+  count        = var.enable_secure_web_proxy ? 1 : 0
+  name         = "codemender-swp-ip"
+  subnetwork   = google_compute_subnetwork.subnet.id
+  address_type = "INTERNAL"
+  region       = var.region
+}
+
+resource "google_network_security_gateway_security_policy" "swp_policy" {
+  count    = var.enable_secure_web_proxy ? 1 : 0
+  name     = "codemender-swp-policy"
+  location = var.region
+}
+
+resource "google_network_security_gateway_security_policy_rule" "allow_debian" {
+  count                   = var.enable_secure_web_proxy ? 1 : 0
+  name                    = "allow-debian"
+  location                = var.region
+  gateway_security_policy = google_network_security_gateway_security_policy.swp_policy[0].name
+  enabled                 = true
+  priority                = 100
+  session_matcher         = "host().endsWith('.debian.org') || host() == 'debian.org'"
+  basic_profile           = "ALLOW"
+}
+
+resource "google_network_services_gateway" "swp" {
+  count                                = var.enable_secure_web_proxy ? 1 : 0
+  name                                 = "codemender-swp"
+  location                             = var.region
+  type                                 = "SECURE_WEB_GATEWAY"
+  ports                                = [80, 443]
+  gateway_security_policy              = google_network_security_gateway_security_policy.swp_policy[0].id
+  network                              = google_compute_network.vpc.id
+  subnetwork                           = google_compute_subnetwork.subnet.id
+  addresses                            = [google_compute_address.swp_ip[0].address]
+  delete_swg_autogen_router_on_destroy = true
+
+  depends_on = [
+    google_compute_subnetwork.proxy_subnet
+  ]
+}
+
+resource "google_compute_firewall" "allow_swp_egress" {
+  count     = var.enable_secure_web_proxy ? 1 : 0
+  name      = "allow-swp-egress"
+  network   = google_compute_network.vpc.name
+  direction = "EGRESS"
+  priority  = 900
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443"]
+  }
+
+  destination_ranges = ["${google_compute_address.swp_ip[0].address}/32"]
+  target_tags        = ["isolated-vm"]
+
+  description = "Permit HTTP and HTTPS egress traffic to the Secure Web Proxy IP address"
+}
+

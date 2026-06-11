@@ -96,3 +96,22 @@ variable "random_project_id" {
   description = "Whether to append a random suffix to the project_id to ensure global uniqueness."
   default     = false
 }
+
+variable "enable_secure_web_proxy" {
+  type        = bool
+  description = "Whether to deploy Google Cloud Secure Web Proxy (SWP) to allow VM access to Debian package repositories."
+  default     = false
+}
+
+variable "proxy_subnet_ip_cidr_range" {
+  type        = string
+  description = "The IPv4 CIDR block for the regional proxy-only subnetwork required by Secure Web Proxy."
+  default     = "10.10.0.0/24"
+}
+
+variable "deletion_policy" {
+  description = "The deletion policy for the project."
+  type        = string
+  default     = "DELETE"
+}
+

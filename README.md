@@ -132,6 +132,21 @@ Notice that the request routes directly to your private internal static IP:
 * Connected to storage.googleapis.com (10.128.0.50) port 443 (#0)
 ```
 
+### Step 3: Verify Secure Web Proxy for Debian Repositories (Optional)
+If you deployed the optional Secure Web Proxy by setting `enable_secure_web_proxy = true`, configure the proxy environment variables inside your VM to test connection limits:
+
+```bash
+# Apply proxy configurations (replace <SECURE_WEB_PROXY_IP> with the output value)
+export http_proxy="http://<SECURE_WEB_PROXY_IP>:80"
+export https_proxy="http://<SECURE_WEB_PROXY_IP>:443"
+
+# Verify that allowed Debian package repository URLs are accessible
+curl -I https://deb.debian.org
+
+# Confirm that blocked URLs (e.g., google.com) are rejected by the proxy policy
+curl -I https://google.com
+```
+
 ---
 
 ## 📦 CodeMender VM Installation & Operation Guide (EAP)
