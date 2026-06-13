@@ -26,3 +26,9 @@ provider "google" {
   project = module.project.project_id
   region  = var.region
 }
+
+provider "google-beta" {
+  project = module.project.project_id
+  region  = var.region
+}
+

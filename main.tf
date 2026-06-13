@@ -27,12 +27,14 @@ module "project" {
 # ==============================================================================
 
 resource "google_compute_network" "vpc" {
+  project                 = module.project.project_id
   name                    = var.network_name
   auto_create_subnetworks = false
   description             = "Custom VPC network for CodeMender CLI execution environment"
 }
 
 resource "google_compute_subnetwork" "subnet" {
+  project                  = module.project.project_id
   name                     = var.subnet_name
   ip_cidr_range            = var.subnet_ip_cidr_range
   region                   = var.region
@@ -46,6 +48,7 @@ resource "google_compute_subnetwork" "subnet" {
 # ==============================================================================
 
 resource "google_compute_global_address" "psc_ip" {
+  project      = module.project.project_id
   name         = "${var.psc_endpoint_name}-ip"
   address_type = "INTERNAL"
   purpose      = "PRIVATE_SERVICE_CONNECT"
@@ -55,6 +58,7 @@ resource "google_compute_global_address" "psc_ip" {
 }
 
 resource "google_compute_global_forwarding_rule" "psc_endpoint" {
+  project               = module.project.project_id
   name                  = var.psc_endpoint_name
   target                = "all-apis"
   network               = google_compute_network.vpc.id
@@ -68,6 +72,7 @@ resource "google_compute_global_forwarding_rule" "psc_endpoint" {
 # ==============================================================================
 
 resource "google_dns_managed_zone" "googleapis_zone" {
+  project     = module.project.project_id
   name        = "psc-googleapis-zone"
   dns_name    = "googleapis.com."
   description = "Private Cloud DNS zone routing googleapis.com requests to the internal PSC endpoint"
@@ -81,6 +86,7 @@ resource "google_dns_managed_zone" "googleapis_zone" {
 }
 
 resource "google_dns_record_set" "googleapis_a" {
+  project      = module.project.project_id
   name         = "googleapis.com."
   managed_zone = google_dns_managed_zone.googleapis_zone.name
   type         = "A"
@@ -89,6 +95,7 @@ resource "google_dns_record_set" "googleapis_a" {
 }
 
 resource "google_dns_record_set" "googleapis_cname" {
+  project      = module.project.project_id
   name         = "*.googleapis.com."
   managed_zone = google_dns_managed_zone.googleapis_zone.name
   type         = "CNAME"
@@ -101,6 +108,7 @@ resource "google_dns_record_set" "googleapis_cname" {
 # ==============================================================================
 
 resource "google_compute_firewall" "allow_psc_egress" {
+  project   = module.project.project_id
   name      = "allow-internal-and-psc-egress"
   network   = google_compute_network.vpc.name
   direction = "EGRESS"
@@ -118,6 +126,7 @@ resource "google_compute_firewall" "allow_psc_egress" {
 }
 
 resource "google_compute_firewall" "deny_internet_egress" {
+  project   = module.project.project_id
   name      = "deny-internet-egress"
   network   = google_compute_network.vpc.name
   direction = "EGRESS"
@@ -134,6 +143,7 @@ resource "google_compute_firewall" "deny_internet_egress" {
 }
 
 resource "google_compute_firewall" "allow_iap_ssh" {
+  project   = module.project.project_id
   name      = "allow-ssh-ingress-from-iap"
   network   = google_compute_network.vpc.name
   direction = "INGRESS"
@@ -156,12 +166,14 @@ resource "google_compute_firewall" "allow_iap_ssh" {
 
 resource "google_service_account" "vm_sa" {
   count        = var.create_test_vm ? 1 : 0
+  project      = module.project.project_id
   account_id   = "codemender-vm-sa"
   display_name = "CodeMender CLI Execution Service Account"
 }
 
 resource "google_compute_instance" "test_vm" {
   count        = var.create_test_vm ? 1 : 0
+  project      = module.project.project_id
   name         = var.vm_name
   machine_type = var.vm_machine_type
   zone         = var.zone
@@ -205,6 +217,7 @@ resource "google_compute_instance" "test_vm" {
 
 resource "google_compute_subnetwork" "proxy_subnet" {
   count         = var.enable_secure_web_proxy ? 1 : 0
+  project       = module.project.project_id
   name          = "codemender-proxy-subnet"
   ip_cidr_range = var.proxy_subnet_ip_cidr_range
   region        = var.region
@@ -215,6 +228,7 @@ resource "google_compute_subnetwork" "proxy_subnet" {
 
 resource "google_compute_address" "swp_ip" {
   count        = var.enable_secure_web_proxy ? 1 : 0
+  project      = module.project.project_id
   name         = "codemender-swp-ip"
   subnetwork   = google_compute_subnetwork.subnet.id
   address_type = "INTERNAL"
@@ -223,12 +237,14 @@ resource "google_compute_address" "swp_ip" {
 
 resource "google_network_security_gateway_security_policy" "swp_policy" {
   count    = var.enable_secure_web_proxy ? 1 : 0
+  project  = module.project.project_id
   name     = "codemender-swp-policy"
   location = var.region
 }
 
 resource "google_network_security_gateway_security_policy_rule" "allow_debian" {
   count                   = var.enable_secure_web_proxy ? 1 : 0
+  project                 = module.project.project_id
   name                    = "allow-debian"
   location                = var.region
   gateway_security_policy = google_network_security_gateway_security_policy.swp_policy[0].name
@@ -240,6 +256,7 @@ resource "google_network_security_gateway_security_policy_rule" "allow_debian" {
 
 resource "google_network_services_gateway" "swp" {
   count                                = var.enable_secure_web_proxy ? 1 : 0
+  project                              = module.project.project_id
   name                                 = "codemender-swp"
   location                             = var.region
   type                                 = "SECURE_WEB_GATEWAY"
@@ -257,6 +274,7 @@ resource "google_network_services_gateway" "swp" {
 
 resource "google_compute_firewall" "allow_swp_egress" {
   count     = var.enable_secure_web_proxy ? 1 : 0
+  project   = module.project.project_id
   name      = "allow-swp-egress"
   network   = google_compute_network.vpc.name
   direction = "EGRESS"
