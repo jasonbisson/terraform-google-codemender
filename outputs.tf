@@ -53,6 +53,12 @@ output "secure_web_proxy_export_commands" {
   value       = var.enable_secure_web_proxy ? "export http_proxy=http://${google_compute_address.swp_ip[0].address}:80 && export https_proxy=http://${google_compute_address.swp_ip[0].address}:443" : null
 }
 
+output "secure_web_proxy_apt_config_command" {
+  description = "Command to persistently configure APT to use the Secure Web Proxy inside the VM."
+  value       = var.enable_secure_web_proxy ? "sudo tee /etc/apt/apt.conf.d/99proxy << 'EOF'\nAcquire::http::Proxy \"http://${google_compute_address.swp_ip[0].address}:80\";\nAcquire::https::Proxy \"http://${google_compute_address.swp_ip[0].address}:443\";\nEOF" : null
+}
+
+
 output "project_id" {
   description = "The ID of the created GCP project."
   value       = module.project.project_id

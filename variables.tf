@@ -70,6 +70,8 @@ variable "gcp_service_list" {
     "compute.googleapis.com",
     "dns.googleapis.com",
     "iam.googleapis.com",
+    "certificatemanager.googleapis.com",
+    "networksecurity.googleapis.com",
     "networkservices.googleapis.com"
   ]
 }

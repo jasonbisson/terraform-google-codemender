@@ -229,7 +229,7 @@ resource "google_compute_subnetwork" "proxy_subnet" {
 resource "google_compute_address" "swp_ip" {
   count        = var.enable_secure_web_proxy ? 1 : 0
   project      = module.project.project_id
-  name         = "codemender-swp-ip"
+  name         = "codemender-swp"
   subnetwork   = google_compute_subnetwork.subnet.id
   address_type = "INTERNAL"
   region       = var.region
@@ -253,6 +253,31 @@ resource "google_network_security_gateway_security_policy_rule" "allow_debian" {
   session_matcher         = "host().endsWith('.debian.org') || host() == 'debian.org'"
   basic_profile           = "ALLOW"
 }
+
+resource "google_network_security_gateway_security_policy_rule" "allow_debian_fastly" {
+  count                   = var.enable_secure_web_proxy ? 1 : 0
+  project                 = module.project.project_id
+  name                    = "allow-debian-fastly"
+  location                = var.region
+  gateway_security_policy = google_network_security_gateway_security_policy.swp_policy[0].name
+  enabled                 = true
+  priority                = 110
+  session_matcher         = "host() == 'debian.map.fastly.net'"
+  basic_profile           = "ALLOW"
+}
+
+resource "google_network_security_gateway_security_policy_rule" "allow_github" {
+  count                   = var.enable_secure_web_proxy ? 1 : 0
+  project                 = module.project.project_id
+  name                    = "allow-github"
+  location                = var.region
+  gateway_security_policy = google_network_security_gateway_security_policy.swp_policy[0].name
+  enabled                 = true
+  priority                = 120
+  session_matcher         = "host().endsWith('.github.com') || host() == 'github.com'"
+  basic_profile           = "ALLOW"
+}
+
 
 resource "google_network_services_gateway" "swp" {
   count                                = var.enable_secure_web_proxy ? 1 : 0

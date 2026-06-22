@@ -92,7 +92,7 @@ project_id      = "your-desired-project-id"
 billing_account = "ABCDE-FGHIJK-LMNOPQ"
 
 # Optional configurations
-# folder_id       = "9876543210"
+# folder_id       = "1234567890"
 # org_id          = "1234567890"
 # random_project_id = true
 ```
@@ -157,7 +157,7 @@ Once internal network routing is fully verified, follow these official onboardin
 Inside your verified host VM (`codemender-cli-host`):
 
 1. **Download the CLI Client**:
-   Download the pre-compiled binary utilizing the authenticated download link provided in your onboarding package (which incorporates your unique `Aiza...` API key).
+   Download the pre-compiled binary.
 2. **Transfer Project Source Code**:
    Clone or copy your target codebase directly onto the VM (e.g., under `~/projects/`).
 3. **Install Build Tools**:
@@ -165,6 +165,7 @@ Inside your verified host VM (`codemender-cli-host`):
 4. **Initial Verification**:
    Run the environment handshake verification suite:
    ```bash
+   sudo ln -s ~/cm-linux /usr/local/bin/cm
    cm init --verify
    ```
    Confirm that all server handshakes return green checkmarks next to **Server Connectivity**.
