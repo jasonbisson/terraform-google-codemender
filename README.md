@@ -1,43 +1,9 @@
 # CodeMender CLI: Enterprise VPC & Private Service Connect (PSC) Automation
 
-This modular, Terraform configuration automates the fully secure networking, identity, and execution environment defined in the **CodeMender CLI (Early Access Program): VPC & Private Service Connect Setup Guide**.
+This modular, Terraform configuration automates the fully secure networking, identity, and execution environment defined in the **CodeMender CLI: VPC & Private Service Connect Setup Guide**.
 
 By deploying this stack, all outbound traffic from your compute environments to Google Cloud APIs (`*.googleapis.com`) routes exclusively over Google's internal network infrastructure using a dedicated **Private Service Connect (PSC)** bundle endpoint.
 
----
-
-## 🏗️ Architecture & Core Pillars
-
-```mermaid
-graph TD
-    subgraph EnterpriseProject ["Enterprise Project & Isolation"]
-        APIs["Google APIs Enablement"]
-        
-        subgraph IsolatedVPC ["Your Isolated VPC"]
-            VM["Shielded Host VM"]
-            DNS["Private Cloud DNS Zone"]
-        end
-
-        subgraph NetworkServices ["Network Services"]
-            PSC["Global PSC Forwarding Rule"]
-        end
-    end
-
-    subgraph SecureBackbone ["Google Secure Backbone"]
-        GCP["Google Cloud APIs & Services"]
-    end
-
-    APIs -.->|"Enforces Readiness"| VM
-    VM -->|"DNS Override"| DNS
-    VM -->|"TCP 443 Egress Allow"| PSC
-    PSC -->|"Fully Private Path"| GCP
-
-    style APIs fill:#1a202c,stroke:#a0aec0,stroke-width:2px
-    style VM fill:#2d3748,stroke:#4299e1,stroke-width:2px
-    style DNS fill:#2d3748,stroke:#48bb78,stroke-width:2px
-    style PSC fill:#2b6cb0,stroke:#ecc94b,stroke-width:2px
-    style GCP fill:#276749,stroke:#68d391,stroke-width:2px
-```
 
 ### 1. Automatic Project Provisioning
 - **Project Factory Integration**: Creates a new, isolated Google Cloud project with billing association and API activation using the Google Project Factory module.
