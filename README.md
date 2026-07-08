@@ -116,6 +116,7 @@ Run the dynamic gcloud connection string emitted in your Terraform outputs:
 ```bash
 gcloud compute ssh codemender-cli-host \
   --zone=us-central1-a \
+  --project="$(terraform output -raw project_id)" \
   --tunnel-through-iap
 ```
 
