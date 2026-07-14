@@ -1,8 +1,6 @@
 # CodeMender: Isolated Google Cloud Environment for Vulnerability Remediation
 
-This modular, Terraform configuration automates an isolated Google Cloud environment for vulnerability remediation using CodeMender service.
-
-By deploying this stack, all outbound traffic from CodeMender to Google APIs (`*.googleapis.com`) routes exclusively over Google's internal network infrastructure using a dedicated **Private Service Connect (PSC)** bundle endpoint.
+This modular, Terraform deployment automates an isolated Google Cloud environment for vulnerability remediation using CodeMender service.
 
 
 ## 🚀 Deployment Instructions
