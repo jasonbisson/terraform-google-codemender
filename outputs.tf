@@ -54,7 +54,7 @@ output "secure_web_proxy_export_commands" {
 }
 
 output "secure_web_proxy_apt_config_command" {
-  description = "Command to persistently configure APT and Git to use the Secure Web Proxy inside the VM."
+  description = "Manual fallback command to configure APT and Git to use the Secure Web Proxy inside the VM (automatically run on VM startup if SWP is enabled)."
   value       = var.enable_secure_web_proxy ? "sudo tee /etc/apt/apt.conf.d/99proxy << 'EOF'\nAcquire::http::Proxy \"http://${google_compute_address.swp_ip[0].address}:80\";\nAcquire::https::Proxy \"http://${google_compute_address.swp_ip[0].address}:443\";\nEOF\ngit config --global http.proxy http://${google_compute_address.swp_ip[0].address}:80 && git config --global https.proxy http://${google_compute_address.swp_ip[0].address}:443" : null
 }
 

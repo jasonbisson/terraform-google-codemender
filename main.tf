@@ -208,6 +208,23 @@ resource "google_compute_instance" "test_vm" {
     enable-oslogin = "TRUE"
   }
 
+  metadata_startup_script = var.enable_secure_web_proxy ? (
+    <<-EOT
+      #!/bin/bash
+      cat << 'EOF' > /etc/apt/apt.conf.d/99proxy
+      Acquire::http::Proxy "http://${try(google_compute_address.swp_ip[0].address, "")}:80";
+      Acquire::https::Proxy "http://${try(google_compute_address.swp_ip[0].address, "")}:443";
+      EOF
+
+      cat << 'EOF' > /etc/gitconfig
+      [http]
+      	proxy = http://${try(google_compute_address.swp_ip[0].address, "")}:80
+      [https]
+      	proxy = http://${try(google_compute_address.swp_ip[0].address, "")}:443
+      EOF
+    EOT
+  ) : null
+
   description = "Isolated validation VM for testing CodeMender CLI over Private Service Connect"
 }
 

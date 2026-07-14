@@ -32,8 +32,9 @@ terraform apply tfplan
 
 ---
 
-## 🧪 Transfer Codemender Binary to GCE Host VM
+## 🧪 Transfer Codemender Binary & Connect to GCE Host VM
 
+### 1. Transfer CodeMender CLI Binary (`cm-linux`) to VM
 ```bash
 gcloud compute scp ~/cm-linux codemender-cli-host:~ \
   --zone="$(terraform output -raw zone)" \
@@ -41,18 +42,7 @@ gcloud compute scp ~/cm-linux codemender-cli-host:~ \
   --tunnel-through-iap
 ```
 
-#### Collect output command to enable Secure Web proxy for APT and Git
-
-```bash
-echo "sudo tee /etc/apt/apt.conf.d/99proxy << 'EOF'
-Acquire::http::Proxy \"http://$(terraform output -raw secure_web_proxy_ip):80\";
-Acquire::https::Proxy \"http://$(terraform output -raw secure_web_proxy_ip):443\";
-EOF
-git config --global http.proxy http://$(terraform output -raw secure_web_proxy_ip):80
-git config --global https.proxy http://$(terraform output -raw secure_web_proxy_ip):443"
-```
-
-### 3.Update Secure Web Proxy on GCE Host VM
+### 2. SSH into GCE Host VM
 ```bash
 gcloud compute ssh codemender-cli-host \
   --zone="$(terraform output -raw zone)" \
@@ -60,15 +50,16 @@ gcloud compute ssh codemender-cli-host \
   --tunnel-through-iap
 ```
 
-Paste in the output from the echo command from step 2 to enable Secure Web Proxy for secure downloads
+*(Note: When `enable_secure_web_proxy = true`, the VM startup script automatically configures system-wide `/etc/apt/apt.conf.d/99proxy` and `/etc/gitconfig` proxy settings on boot.)*
 
-Verify the Secure Web Proxy for apt installs is working with following command:
+### 3. Verify Connectivity & Tools
+Verify that the Secure Web Proxy for APT installs is working:
 
 ```bash
 sudo apt update && sudo apt install -y git
 ```
 
-Verify Google API traffic resolves to the Private address with the following command:
+Verify Google API traffic resolves to the Private address:
 
 ```bash
 curl -v https://storage.googleapis.com
