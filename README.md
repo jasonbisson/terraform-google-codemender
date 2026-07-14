@@ -1,47 +1,9 @@
-# CodeMender CLI: Enterprise VPC & Private Service Connect (PSC) Automation
+# CodeMender: Isolated Google Cloud Environment for Vulnerability Remediation
 
-This modular, Terraform configuration automates the fully secure networking, identity, and execution environment defined in the **CodeMender CLI: VPC & Private Service Connect Setup Guide**.
+This modular, Terraform configuration automates an isolated Google Cloud environment for vulnerability remediation using CodeMender service.
 
-By deploying this stack, all outbound traffic from your compute environments to Google Cloud APIs (`*.googleapis.com`) routes exclusively over Google's internal network infrastructure using a dedicated **Private Service Connect (PSC)** bundle endpoint.
+By deploying this stack, all outbound traffic from CodeMender to Google APIs (`*.googleapis.com`) routes exclusively over Google's internal network infrastructure using a dedicated **Private Service Connect (PSC)** bundle endpoint.
 
-
-### 1. Automatic Project Provisioning
-- **Project Factory Integration**: Creates a new, isolated Google Cloud project with billing association and API activation using the Google Project Factory module.
-- **Zero-Touch API Activation**: Activates essential GCP APIs (`compute`, `dns`, `iam`, `networkservices`) automatically.
-
-### 2. Networking
-- **Custom VPC Network**: Establishes a custom mode VPC (`codemender-vpc`).
-- **Private Google Access**: Configures a dedicated subnetwork (`10.0.0.0/24`) with `private_ip_google_access = true` enforced.
-
-### 3. Private Service Connect
-- **Global Internal Address**: Allocates a static internal global address (`10.128.0.50`).
-- **Compliant Naming**: Provisions a Global Forwarding Rule named `codemenderpsc`, conforming to Google's 1–20 lowercase letters/numbers rule.
-
-### 4. Secure Firewall Posture
-- **Priority 900 (`allow-internal-and-psc-egress`)**: Exclusively permits HTTPS (TCP 443) egress from `isolated-vm` instances to the PSC IP address (`10.128.0.50/32`).
-- **Priority 1000 (`deny-internet-egress`)**: Blocks all general external internet egress (`0.0.0.0/0`), preventing data exfiltration.
-- **Priority 1000 (`allow-ssh-ingress-from-iap`)**: Permits secure administration SSH access exclusively via Cloud IAP (`35.235.240.0/20`).
-
-### 5. DNS Override
-- **Private Managed Zone**: Creates a Cloud DNS private zone (`psc-googleapis-zone`) bound to your VPC.
-- **Transparent Routing**: Provisions **A** (`googleapis.com.`) and **CNAME** (`*.googleapis.com.`) record sets targeting your internal PSC IP address.
-
-### 6. Org-Policy Compliant Host
-- **Shielded VM Enforcement**: Pre-configured with **Secure Boot**, **vTPM**, and **Integrity Monitoring** enabled to seamlessly pass organization policies (`constraints/compute.requireShieldedVm`).
-- **Completely Private**: Operates without external IPs using a dedicated least-privilege Service Account.
-
----
-
-## 📁 Repository Structure
-
-| File | Primary Function |
-| :--- | :--- |
-| **`main.tf`** | Consolidated configuration that creates the GCP project, network, DNS, firewalls, and compute resources. |
-| **`variables.tf`** | Documented variables supporting project creation and custom IP layouts. |
-| **`outputs.tf`** | Emits network details, validation commands, and dynamic SSH prompts. |
-| **`versions.tf`** | Configures Terraform version constraints and providers supporting offline execution. |
-
----
 
 ## 🚀 Deployment Instructions
 
@@ -92,7 +54,7 @@ git config --global http.proxy http://$(terraform output -raw secure_web_proxy_i
 git config --global https.proxy http://$(terraform output -raw secure_web_proxy_ip):443"
 ```
 
-### Step 2: Update Secure Web Proxy on GCE Host VM
+### 3.Update Secure Web Proxy on GCE Host VM
 ```bash
 gcloud compute ssh codemender-cli-host \
   --zone="$(terraform output -raw zone)" \
@@ -100,7 +62,7 @@ gcloud compute ssh codemender-cli-host \
   --tunnel-through-iap
 ```
 
-Paste in the command output from step 1 to enable Secure Web Proxy for secure downloads
+Paste in the output from the echo command from step 2 to enable Secure Web Proxy for secure downloads
 
 Verify the Secure Web Proxy for apt installs is working with following command:
 
