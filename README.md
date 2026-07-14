@@ -1,4 +1,4 @@
-# CodeMender: Isolated Google Cloud Environment for Vulnerability Remediation
+# Isolated Google Cloud Environment for Vulnerability Remediation
 
 This modular, Terraform deployment automates an isolated Google Cloud environment for vulnerability remediation using CodeMender service.
 
