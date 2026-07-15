@@ -109,7 +109,7 @@ curl -v https://storage.googleapis.com
 3. **Install Build Tools**:
    Ensure all native dependencies, compilers, or build systems required by your target repository (e.g., `make`, `npm`, `pip`).
    ```bash
-   sudo apt install -y make pip
+   sudo apt install -y make pip npm 
    ```
 
 4. **Initial Verification**:
@@ -165,7 +165,7 @@ cm fix 8293b --no-cache     # Force cold generation of a new remediation candida
 5. Bulk remediation 
 ``bash
  for id in $(cm report --format json 2>/dev/null | jq -r '.[] | select(.Status == "OPEN") | .FindingID'); do echo "Processing fix for Finding ID: $id"; cm fix "$id" --yes; done
- ```
+```
 
 Session Management
 
