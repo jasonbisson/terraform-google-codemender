@@ -1,7 +1,34 @@
-# Isolated Google Cloud Environment for Vulnerability Remediation
+# CodeMender Vulnerability Remediation
 
-This modular, Terraform deployment automates an isolated Google Cloud environment for vulnerability remediation using CodeMender service.
+This modular, a simple Terraform deployment automates an isolated Google Cloud environment for vulnerability remediation using CodeMender service.
 
+## Features
+- Isolated GCE VM for vulnerability remediation
+- Secure Web Proxy for APT installs
+- Private DNS zone for Google API access
+- Cloud IAP for secure access
+
+
+## Vulnerability Remediation Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Dev as Security Analyst
+    participant CM as CodeMender CLI
+    participant Sandbox as Secure VM Sandbox
+
+    Dev->>CM: cm find ./src/auth/
+    CM-->>Dev: Emits <finding-id> (e.g. 8293b)
+    
+    Dev->>CM: cm find verify 8293b
+    CM->>Sandbox: Triggers PoC Exploit Handshake
+    Sandbox-->>CM: Validates Exploitability
+    
+    Dev->>CM: cm fix 8293b
+    CM->>Sandbox: Synthesizes & Re-verifies Fix Patch
+    CM-->>Dev: Surfaces High-Quality Verified Diff
+```
 
 ## 🚀 Deployment Instructions
 
