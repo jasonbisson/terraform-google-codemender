@@ -30,7 +30,7 @@ sequenceDiagram
     CM-->>Dev: Surfaces High-Quality Verified Diff
 ```
 
-## 🚀 Deployment Instructions
+## 🚀 Infrastructure Deployment Instructions
 
 ### 1. Configure Variables
 Copy the variable template file:
@@ -128,28 +128,8 @@ Edit ~/.codemender/config.yaml to fit your environment.
 - project_paths: Set the source root of projects you want to use Codemender on. 
 - tools: Set configuration related to confirmations for writes and tool executions
 
-### 2. Vulnerability Remediation Lifecycle
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Dev as Security Analyst
-    participant CM as CodeMender CLI
-    participant Sandbox as Secure VM Sandbox
-
-    Dev->>CM: cm find ./src/auth/
-    CM-->>Dev: Emits <finding-id> (e.g. 8293b)
-    
-    Dev->>CM: cm find verify 8293b
-    CM->>Sandbox: Triggers PoC Exploit Handshake
-    Sandbox-->>CM: Validates Exploitability
-    
-    Dev->>CM: cm fix 8293b
-    CM->>Sandbox: Synthesizes & Re-verifies Fix Patch
-    CM-->>Dev: Surfaces High-Quality Verified Diff
-```
-
-## Codemender CLI commands
+## Codemender kick the tires commands
 
 1. **Scan & Discover (`cm find`)**
 Execute targeted scans across specific subcomponents (recommending batches of 10–50 files):
@@ -184,23 +164,15 @@ cm fix 8293b --no-cache     # Force cold generation of a new remediation candida
 
 5. Bulk remediation 
 ``bash
- for id in $(cm report --format json 2>/dev/null | jq -r '.[] | select(.Status == "OPEN") | .FindingID'); \
- do echo "Processing fix for Finding ID: $id"; cm fix "$id" --yes; done
-
+ for id in $(cm report --format json 2>/dev/null | jq -r '.[] | select(.Status == "OPEN") | .FindingID'); do echo "Processing fix for Finding ID: $id"; cm fix "$id" --yes; done
  ```
 
+Session Management
 
-### 4. Quotas & Session Management
-
-#### Managing Active Sessions
+Managing Active Sessions
 CodeMender tracks ongoing scan/verify/fix sessions. **Only one session can be active per project at a time.**
 ```bash
 cm session list           # Display active sessions and their lifecycle status
 cm session cancel <id>    # Abort a conflicting or hanging session
 cm session resume <id>    # Continue a suspended verification run
 ```
-
-#### Quotas & Payload Limits
-- **Rate Limits**: 600 Queries Per Minute (QPM) and 432,000 calls per day.
-- **Individual File Limit**: Files larger than **500 KB** are excluded by default (customizable via `max_file_size_kb`).
-- **Aggregate Payload Limit**: Enforces a strict total request payload cap of **100 MiB**.
