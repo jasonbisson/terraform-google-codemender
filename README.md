@@ -30,7 +30,7 @@ sequenceDiagram
     CM-->>Dev: Surfaces High-Quality Verified Diff
 ```
 
-## 🚀 Infrastructure Deployment Instructions
+## 🚀 Infrastructure Deployment
 
 ### 1. Configure Variables
 Copy the variable template file:
@@ -129,7 +129,7 @@ Edit ~/.codemender/config.yaml to fit your environment.
 - tools: Set configuration related to confirmations for writes and tool executions
 
 
-## Codemender kick the tires commands
+## Codemender CLI Commands
 
 1. **Scan & Discover (`cm find`)**
 Execute targeted scans across specific subcomponents (recommending batches of 10–50 files):
