@@ -163,7 +163,7 @@ cm fix 8293b --no-cache     # Force cold generation of a new remediation candida
 ```
 
 5. **Bulk remediation** 
-``bash
+```bash
  for id in $(cm report --format json 2>/dev/null | jq -r '.[] | select(.Status == "OPEN") | .FindingID'); do echo "Processing fix for Finding ID: $id"; cm fix "$id" --yes; done
 ```
 
