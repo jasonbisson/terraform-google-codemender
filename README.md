@@ -162,17 +162,15 @@ cm fix 8293b --auto-apply   # Automatically commit validated patch directly
 cm fix 8293b --no-cache     # Force cold generation of a new remediation candidate
 ```
 
-5. Bulk remediation 
+5. **Bulk remediation** 
 ``bash
  for id in $(cm report --format json 2>/dev/null | jq -r '.[] | select(.Status == "OPEN") | .FindingID'); do echo "Processing fix for Finding ID: $id"; cm fix "$id" --yes; done
 ```
 
-Session Management
-
-Managing Active Sessions
-CodeMender tracks ongoing scan/verify/fix sessions. **Only one session can be active per project at a time.**
+6. **Session Management**
 ```bash
 cm session list           # Display active sessions and their lifecycle status
 cm session cancel <id>    # Abort a conflicting or hanging session
 cm session resume <id>    # Continue a suspended verification run
 ```
+
