@@ -14,7 +14,7 @@ cp terraform.tfvars.example terraform.tfvars
 
 Edit `terraform.tfvars` and set the project name/ID, billing account, and any optional folder/organization IDs:
 ```hcl
-project_id      = "your-desired-project-id"
+project_id      = "project-id-prefix"
 billing_account = "ABCDE-FGHIJK-LMNOPQ"
 
 # Optional configurations
@@ -32,9 +32,9 @@ terraform apply tfplan
 
 ---
 
-## 🧪 Transfer Codemender Binary & Connect to GCE Host VM
+## 🧪 Copy Codemender Client binary to isolated GCE VM
 
-### 1. Transfer CodeMender CLI Binary (`cm-linux`) to VM
+### 1. Copy Codemender Client binary (`cm-linux`)
 ```bash
 gcloud compute scp ~/cm-linux codemender-cli-host:~ \
   --zone="$(terraform output -raw zone)" \
@@ -42,7 +42,7 @@ gcloud compute scp ~/cm-linux codemender-cli-host:~ \
   --tunnel-through-iap
 ```
 
-### 2. SSH into GCE Host VM
+### 2. SSH into isolated GCE VM
 ```bash
 gcloud compute ssh codemender-cli-host \
   --zone="$(terraform output -raw zone)" \
@@ -66,10 +66,7 @@ curl -v https://storage.googleapis.com
 ```
 
 
-## 📦 CodeMender Runtime Configuration 
-
-### 1. VM Installation & Build Dependencies
-Inside your verified host VM (`codemender-cli-host`):
+## 📦 CodeMender Client configuration 
 
 1. **Verify CLI Client in Home Directory**:
    Ensure `cm-linux` is located in your home directory (`~/cm-linux`) and make it executable:
@@ -77,7 +74,7 @@ Inside your verified host VM (`codemender-cli-host`):
    chmod +x ~/cm-linux
    ```
 2. **Clone a repo to evaluate**:
-   Clone the Juice repo https://github.com/juice-shop/juice-shop or another smaller public repo
+   Clone the Juice repo https://github.com/juice-shop/juice-shop or another public repo on GitHub.
    ```bash
    git clone https://github.com/juice-shop/juice-shop
    ```
@@ -99,10 +96,10 @@ Inside your verified host VM (`codemender-cli-host`):
 
 5. **Edit Codemender configuration** 
 Edit ~/.codemender/config.yaml to fit your environment. 
-- vcs: allows you to set the version control system used for the project. We support git and mercurial. If you don’t use git or mercurial, you can use the “custom” vcs option and specify the vcs commands in the config. 
-- build: specify the command you want the agent to use for building and testing the project
-- project_paths: specify the source root of projects you want to use the codemender on. 
-- tools: configuration related to confirmations for writes and tool executions
+- vcs: Set the version control system used. We support git and mercurial. If you don’t use git or mercurial, you can use the “custom” vcs option. 
+- build: Set the command the agent should use for building and testing.
+- project_paths: Set the source root of projects you want to use Codemender on. 
+- tools: Set configuration related to confirmations for writes and tool executions
 
 ### 2. Vulnerability Remediation Lifecycle
 
@@ -150,13 +147,20 @@ cm find verify 8293b --skip-exploit        # Validate analysis without executing
 cm find verify 8293b -c "Focus on OAuth"   # Supply custom contextual prompt instructions
 ```
 
-4. **Sandboxed Remediation (`cm fix`)**
+4. **Remediation (`cm fix`)**
 Generates, compiles, executes regression builds, and applies functionally correct patches:
 ```bash
 cm fix <finding-id>
 cm fix 8293b --auto-apply   # Automatically commit validated patch directly
 cm fix 8293b --no-cache     # Force cold generation of a new remediation candidate
 ```
+
+5. Bulk remediation 
+``bash
+ for id in $(cm report --format json 2>/dev/null | jq -r '.[] | select(.Status == "OPEN") | .FindingID'); \
+ do echo "Processing fix for Finding ID: $id"; cm fix "$id" --yes; done
+
+ ```
 
 
 ### 4. Quotas & Session Management
