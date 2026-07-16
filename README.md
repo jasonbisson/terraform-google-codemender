@@ -80,10 +80,10 @@ gcloud compute ssh codemender-cli-host \
 *(Note: When `enable_secure_web_proxy = true`, the VM startup script automatically configures system-wide `/etc/apt/apt.conf.d/99proxy` and `/etc/gitconfig` proxy settings on boot.)*
 
 ### 3. Verify Connectivity & Tools
-Verify that the Secure Web Proxy for APT installs is working:
+Verify that the Secure Web Proxy for APT installs is working by installing Node.js, build tools, and dependencies required by target apps (e.g. Juice Shop):
 
 ```bash
-sudo apt update && sudo apt install -y git
+sudo apt update && sudo apt install -y git curl build-essential python3 pkg-config nodejs npm
 ```
 
 Verify Google API traffic resolves to the Private address:
@@ -106,13 +106,7 @@ curl -v https://storage.googleapis.com
    git clone https://github.com/juice-shop/juice-shop
    ```
 
-3. **Install Build Tools**:
-   Install Node.js, package manager, and native build dependencies required by Juice Shop:
-   ```bash
-   sudo apt update && sudo apt install -y git curl build-essential python3 pkg-config nodejs npm
-   ```
-
-4. **Initial Verification**:
+3. **Initial Verification**:
    Run the environment handshake verification suite:
    ```bash
    sudo ln -s ~/cm-linux /usr/local/bin/cm
@@ -121,7 +115,7 @@ curl -v https://storage.googleapis.com
    ```
    Confirm that all server handshakes return green checkmarks next to **Server Connectivity**.
 
-5. **Edit Codemender configuration** 
+4. **Edit Codemender configuration** 
 Edit ~/.codemender/config.yaml to fit your environment. 
 - vcs: Set the version control system used. We support git and mercurial. If you don’t use git or mercurial, you can use the “custom” vcs option. 
 - build: Set the command the agent should use for building and testing.
