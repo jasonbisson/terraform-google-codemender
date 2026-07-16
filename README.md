@@ -107,9 +107,9 @@ curl -v https://storage.googleapis.com
    ```
 
 3. **Install Build Tools**:
-   Ensure all native dependencies, compilers, or build systems required by your target repository (e.g., `make`, `npm`, `pip`).
+   Install Node.js, package manager, and native build dependencies required by Juice Shop:
    ```bash
-   sudo apt install -y make pip npm 
+   sudo apt update && sudo apt install -y git curl build-essential python3 pkg-config nodejs npm
    ```
 
 4. **Initial Verification**:
@@ -172,5 +172,15 @@ cm fix 8293b --no-cache     # Force cold generation of a new remediation candida
 cm session list           # Display active sessions and their lifecycle status
 cm session cancel <id>    # Abort a conflicting or hanging session
 cm session resume <id>    # Continue a suspended verification run
+```
+
+---
+
+## 🧹 Clean Up Resources
+
+To destroy all deployed infrastructure and resources when finished:
+
+```bash
+terraform destroy
 ```
 
