@@ -38,6 +38,17 @@ output "iap_scp_command" {
   value       = var.create_test_vm ? "gcloud compute scp ~/cm-linux ${google_compute_instance.test_vm[0].name}:~ --zone=${var.zone} --project=${module.project.project_id} --tunnel-through-iap" : null
 }
 
+output "artifact_download_command" {
+  description = "gcloud CLI command to download the CodeMender CLI binary directly from Artifact Registry."
+  value       = "gcloud artifacts generic download --project=cmoc-prod --location=us --repository=codemender-cli-production --package=cm --version=stable --name=cm-linux-amd64.zip --destination=./"
+}
+
+output "cli_curl_download_command" {
+  description = "curl command to download the CodeMender CLI binary directly from Artifact Registry."
+  value       = "curl -L -o cm-linux-amd64.zip \"https://artifactregistry.googleapis.com/download/v1/projects/cmoc-prod/locations/us/repositories/codemender-cli-production/files/cm%3Astable%3Acm-linux-amd64.zip:download?alt=media\""
+}
+
+
 output "verification_curl_command" {
   description = "Test curl command to execute inside the VM to verify PSC routing to Google APIs."
   value       = "curl -v https://storage.googleapis.com"

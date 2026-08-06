@@ -62,9 +62,8 @@ resource "google_compute_global_forwarding_rule" "psc_endpoint" {
   name                  = var.psc_endpoint_name
   target                = "all-apis"
   network               = google_compute_network.vpc.id
-  ip_address            = google_compute_global_address.psc_ip.id
+  ip_address            = google_compute_global_address.psc_ip.address
   load_balancing_scheme = ""
-  description           = "Global Private Service Connect endpoint routing traffic to All Google Cloud APIs"
 }
 
 # ==============================================================================
@@ -208,22 +207,62 @@ resource "google_compute_instance" "test_vm" {
     enable-oslogin = "TRUE"
   }
 
-  metadata_startup_script = var.enable_secure_web_proxy ? (
-    <<-EOT
-      #!/bin/bash
-      cat << 'EOF' > /etc/apt/apt.conf.d/99proxy
-      Acquire::http::Proxy "http://${try(google_compute_address.swp_ip[0].address, "")}:80";
-      Acquire::https::Proxy "http://${try(google_compute_address.swp_ip[0].address, "")}:443";
-      EOF
+  metadata_startup_script = <<-EOT
+    #!/bin/bash
 
-      cat << 'EOF' > /etc/gitconfig
-      [http]
-      	proxy = http://${try(google_compute_address.swp_ip[0].address, "")}:80
-      [https]
-      	proxy = http://${try(google_compute_address.swp_ip[0].address, "")}:443
-      EOF
-    EOT
-  ) : null
+    %{ if var.enable_secure_web_proxy ~}
+    # Configure APT proxy
+    cat << 'EOF' > /etc/apt/apt.conf.d/99proxy
+    Acquire::http::Proxy "http://${google_compute_address.swp_ip[0].address}:80";
+    Acquire::https::Proxy "http://${google_compute_address.swp_ip[0].address}:443";
+    EOF
+
+    # Configure Git proxy
+    cat << 'EOF' > /etc/gitconfig
+    [http]
+    	proxy = http://${google_compute_address.swp_ip[0].address}:80
+    [https]
+    	proxy = http://${google_compute_address.swp_ip[0].address}:443
+    EOF
+
+    # Update packages and install dependencies
+    apt-get update && apt-get install -y git curl build-essential python3 pkg-config nodejs npm unzip
+    %{ endif ~}
+
+    # Download and install CodeMender CLI (Linux x86_64) via Private Service Connect
+    CLI_URL="https://artifactregistry.googleapis.com/download/v1/projects/cmoc-prod/locations/us/repositories/codemender-cli-production/files/cm%3Astable%3Acm-linux-amd64.zip:download?alt=media"
+    
+    echo "Downloading CodeMender CLI package via PSC..."
+    if curl --noproxy "*" -sSL -f -o /tmp/cm-linux-amd64.zip "$CLI_URL"; then
+      echo "Downloaded CodeMender CLI via curl"
+    elif command -v gcloud >/dev/null 2>&1; then
+      echo "Downloading CodeMender CLI via gcloud..."
+      gcloud artifacts generic download \
+        --project=cmoc-prod \
+        --location=us \
+        --repository=codemender-cli-production \
+        --package=cm \
+        --version=stable \
+        --name=cm-linux-amd64.zip \
+        --destination=/tmp/
+    fi
+
+    if [ -f /tmp/cm-linux-amd64.zip ]; then
+      if command -v unzip >/dev/null 2>&1; then
+        unzip -o /tmp/cm-linux-amd64.zip -d /tmp/
+      elif command -v python3 >/dev/null 2>&1; then
+        python3 -m zipfile -e /tmp/cm-linux-amd64.zip /tmp/
+      elif command -v python >/dev/null 2>&1; then
+        python -m zipfile -e /tmp/cm-linux-amd64.zip /tmp/
+      fi
+      if [ -f /tmp/cm ]; then
+        chmod +x /tmp/cm
+        mv /tmp/cm /usr/local/bin/cm
+        rm -f /tmp/cm-linux-amd64.zip
+        echo "CodeMender CLI installed successfully to /usr/local/bin/cm"
+      fi
+    fi
+  EOT
 
   description = "Isolated validation VM for testing CodeMender CLI over Private Service Connect"
 }

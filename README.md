@@ -59,17 +59,43 @@ terraform apply tfplan
 
 ---
 
-## 🧪 Copy Codemender Client binary to isolated GCE VM
+## 🧪 CodeMender CLI on isolated GCE VM
 
-### 1. Copy Codemender Client binary (`cm-linux`)
+### 1. Automatic Installation via Startup Script
+The Compute Engine metadata startup script automatically downloads the CodeMender CLI (`cm`) package from Artifact Registry and installs it to `/usr/local/bin/cm` on VM boot.
+
+If Secure Web Proxy is enabled (`enable_secure_web_proxy = true`), the proxy rules allow traffic to Debian repositories and GitHub, while all Google Cloud APIs (`*.googleapis.com`, including Artifact Registry for downloading the CodeMender CLI) route directly through the Private Service Connect (PSC) endpoint.
+
+### 2. Manual Download Options (Reference)
+If you need to manually download or update the CLI on the VM:
+
+**Option A: Using `curl`**
 ```bash
-gcloud compute scp ~/cm-linux codemender-cli-host:~ \
-  --zone="$(terraform output -raw zone)" \
-  --project="$(terraform output -raw project_id)" \
-  --tunnel-through-iap
+curl -L -o cm-linux-amd64.zip \
+  "https://artifactregistry.googleapis.com/download/v1/projects/cmoc-prod/locations/us/repositories/codemender-cli-production/files/cm%3Astable%3Acm-linux-amd64.zip:download?alt=media"
+
+unzip -o cm-linux-amd64.zip
+chmod +x cm
+sudo mv cm /usr/local/bin/cm
 ```
 
-### 2. SSH into isolated GCE VM
+**Option B: Using `gcloud CLI`**
+```bash
+gcloud artifacts generic download \
+  --project=cmoc-prod \
+  --location=us \
+  --repository=codemender-cli-production \
+  --package=cm \
+  --version=stable \
+  --name=cm-linux-amd64.zip \
+  --destination=./
+
+unzip -o cm-linux-amd64.zip
+chmod +x cm
+sudo mv cm /usr/local/bin/cm
+```
+
+### 3. SSH into isolated GCE VM
 ```bash
 gcloud compute ssh codemender-cli-host \
   --zone="$(terraform output -raw zone)" \
@@ -77,16 +103,16 @@ gcloud compute ssh codemender-cli-host \
   --tunnel-through-iap
 ```
 
-*(Note: When `enable_secure_web_proxy = true`, the VM startup script automatically configures system-wide `/etc/apt/apt.conf.d/99proxy` and `/etc/gitconfig` proxy settings on boot.)*
+*(Note: When `enable_secure_web_proxy = true`, the VM startup script automatically configures system-wide `/etc/apt/apt.conf.d/99proxy` and `/etc/gitconfig` proxy settings, and installs required development packages (`git`, `curl`, `build-essential`, `python3`, `pkg-config`, `nodejs`, `npm`, `unzip`) on boot.)*
 
-### 3. Verify Connectivity & Tools
-Verify that the Secure Web Proxy for APT installs is working by installing Node.js, build tools, and dependencies required by target apps (e.g. Juice Shop):
+### 4. Verify Connectivity & Tools (Optional)
+Packages are installed automatically on startup when SWP is enabled. If you need to manually run the package installation or verify APT connectivity:
 
 ```bash
-sudo apt update && sudo apt install -y git curl build-essential python3 pkg-config nodejs npm
+sudo apt update && sudo apt install -y git curl build-essential python3 pkg-config nodejs npm unzip
 ```
 
-Verify Google API traffic resolves to the Private address:
+Verify Google API traffic resolves to the Private address via PSC:
 
 ```bash
 curl -v https://storage.googleapis.com
@@ -95,10 +121,10 @@ curl -v https://storage.googleapis.com
 
 ## 📦 CodeMender Client configuration 
 
-1. **Verify CLI Client in Home Directory**:
-   Ensure `cm-linux` is located in your home directory (`~/cm-linux`) and make it executable:
+1. **Verify CLI Installation**:
+   Verify that `cm` is available in your PATH:
    ```bash
-   chmod +x ~/cm-linux
+   cm --version
    ```
 2. **Clone a repo to evaluate**:
    Clone the Juice repo https://github.com/juice-shop/juice-shop or another public repo on GitHub.
@@ -109,7 +135,6 @@ curl -v https://storage.googleapis.com
 3. **Initial Verification**:
    Run the environment handshake verification suite:
    ```bash
-   sudo ln -s ~/cm-linux /usr/local/bin/cm
    cm init
    cm init --verify
    ```

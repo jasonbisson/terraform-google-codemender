@@ -101,7 +101,7 @@ variable "random_project_id" {
 
 variable "enable_secure_web_proxy" {
   type        = bool
-  description = "Whether to deploy Google Cloud Secure Web Proxy (SWP) to allow VM access to Debian package repositories."
+  description = "Whether to deploy Google Cloud Secure Web Proxy (SWP) to allow VM access to Debian package repositories and GitHub."
   default     = false
 }
 
